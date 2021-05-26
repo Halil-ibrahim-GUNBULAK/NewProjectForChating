@@ -1,4 +1,5 @@
 from functools import partial
+
 from PyQt5 import QtCore, QtWidgets
 import client_ui
 import connect_ui
@@ -6,6 +7,8 @@ import time
 import sys
 import socket
 import random
+
+from PyQt5.QtWidgets import QMessageBox
 
 
 class ReceiveThread(QtCore.QThread):
@@ -32,6 +35,8 @@ class ReceiveThread(QtCore.QThread):
 
 class Client(object):
     buttonList=[]
+    send_message_clientName="client_xyz-"
+    nickname = ""
     def buttonListi(self):
         btn = QtWidgets.QPushButton()
         btn.setMinimumSize(150, 30)
@@ -86,7 +91,7 @@ class Client(object):
     def btn_connect_clicked(self):
         host = self.connect_ui.hostTextEdit.toPlainText()
         port = self.connect_ui.portTextEdit.toPlainText()
-        nickname = self.connect_ui.nameTextEdit.toPlainText()
+        self.nickname = self.connect_ui.nameTextEdit.toPlainText()
 
         if len(host) == 0:
             host = "192.168.2.86"
@@ -101,12 +106,12 @@ class Client(object):
                 print("[INFO]", error)
                 self.show_error("Port Number Error", error)
 
-        if len(nickname) < 1:
-            nickname = socket.gethostname()
+        if len(self.nickname) < 1:
+            self.nickname = socket.gethostname()
 
-        nickname = nickname + "_" + str(random.randint(1, port))
+        self.nickname = self.nickname + "_" + str(random.randint(1, port))
 
-        if self.connect(host, port, nickname):
+        if self.connect(host, port,self.nickname):
             self.connectWidget.setHidden(True)
             self.chatWidget.setVisible(True)
 
@@ -122,8 +127,9 @@ class Client(object):
                 child.widget().deleteLater()
     def show_message(self, message):
 
-        if message[0]=='(':
+        if message[0:2]=='+ ':
             i=0
+            print(message)
             print(self.chat_ui.vbox.isEmpty(),"  i=" ,i)
             '''
             while self.chat_ui.vbox.isEmpty()!=True:
@@ -138,25 +144,39 @@ class Client(object):
             self.buttonListi()
             self.chat_ui.textBrowser2.clear()
             #self.chat_ui.vbox
-            message=str(message).split(")")
+            message=str(message).split("*")
             for i in range(len(message)-1):
                 strmessage=str(message[i])
+                messageNickAndPorts = message[i].split("-")
+                nicks = messageNickAndPorts[0][2:]
+                ports = messageNickAndPorts[1]
                 self.buttonList[i].setVisible(True)
-                self.buttonList[i].setText(str(message[i]))
+                self.buttonList[i].setText(nicks)
                 self.buttonList[i].clicked.connect(partial(self.printName,action=strmessage))
                 self.chat_ui.textBrowser2.append(message[i])
-
                 self.chat_ui.vbox.addWidget(self.buttonList[i])
 
 
             print("bitti")
+        elif message=="question_xyz":
+          print("istek geldi")
+          self.showdialog()
         else:
-
-
             self.chat_ui.textBrowser.append(message)
 
     def printName(self,action):
-        print(action)
+        messageNickAndPorts = action.split("-")
+        nicks = messageNickAndPorts[0][2:]
+        ports = messageNickAndPorts[1]
+        send_message_clientName = "client_xyz-" + str(nicks)
+        print(send_message_clientName == ("client_xyz-"+str(self.nickname)),"send message name=",send_message_clientName
+              ,"client name =", "client_xyz_+ "+str(self.nickname))
+        if send_message_clientName == ("client_xyz-"+str(self.nickname)):
+                 print("say noo")
+        else:
+           print(send_message_clientName)
+           self.send_message_private(send_message_clientName)
+
 
 
     def connect(self, host, port, nickname):
@@ -190,6 +210,13 @@ class Client(object):
             print("[INFO]", error)
             self.show_error("Server Error", error)
         self.chat_ui.textEdit.clear()
+    def send_message_private(self,sender):
+        try:
+            self.tcp_client.send(sender.encode())
+        except Exception as e:
+            error = "Unable to send message '{}'".format(str(e))
+            print("[INFO]", error)
+            self.show_error("Server Error", error)
 
     def show_error(self, error_type, message):
         errorDialog = QtWidgets.QMessageBox()
@@ -198,7 +225,28 @@ class Client(object):
         errorDialog.setStandardButtons(QtWidgets.QMessageBox.Ok)
         errorDialog.exec_()
 
+    def showdialog(self):
+        self.msg = QMessageBox()
+        self.msg.setIcon(QMessageBox.Information)
 
+        self.msg.setText("This is a message box")
+        self.msg.setInformativeText("This is additional information")
+        self.msg.setWindowTitle("MessageBox demo")
+        self.msg.setDetailedText("The details are as follows:")
+        self.msg.setStandardButtons(QMessageBox.Ok | QMessageBox.Cancel)
+        self.msg.buttonClicked.connect(self.msgbtn)
+
+        retval = self.msg.exec_()
+        print( "value of pressed message box button:", retval)
+
+    def msgbtn(self,i):
+        print ("Button pressed is:", i.text())
+        if(i.text()=="OK"):
+          self.send_message_private("accept_xyz")
+          #yeniSayfaKurulacakBurada
+        else:
+          self.send_message_private("not_accept_xyz")
+          #devamke  sadece diğer tarafa bilgilendirme mesaji
 if __name__ == "__main__":
     app = QtWidgets.QApplication(sys.argv)
     c = Client()

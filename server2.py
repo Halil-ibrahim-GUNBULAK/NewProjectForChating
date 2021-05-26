@@ -2,6 +2,7 @@ import socket
 import threading
 
 class Server(object):
+    istekListesi=[]
     def __init__(self, hostname, port):
         self.clients = {}
 
@@ -20,7 +21,7 @@ class Server(object):
             nickname = connection.recv(1024)
             nickname = nickname.decode()
             self.clients[nickname] = connection
-
+            self.send_onlineClients()
             # start a thread for the client
             threading.Thread(target=self.receive_message, args=(connection, nickname), daemon=True).start()
 
@@ -32,15 +33,29 @@ class Server(object):
         while True:
             try:
                 msg = connection.recv(1024)
+                message=msg.decode()
 
-                self.send_message(msg, nickname)
-                print(nickname + ": " + msg.decode())
+                if(message[0:11]=="client_xyz-"):
+                    gelen=str(message).split("-")
+                    nicks=gelen[1]
+                    print(self.clients[nicks].getpeername())
+                    message1="question_xyz"
+                    print("gönderilecek diğer tarafa")
+                    self.clients[nicks].send(message1.encode())
+                    #print(nickname + ": " + msg.decode()+"and  question do u want? :"+nicks)
+                elif message=="accept_xyz":
+                    print("kabul edildi mesaji servera ulaştı")
+                elif message=="not_accept_xyz":
+                    print("kabul edilmedi mesaji servera ulaştı")
+                else:
+                    self.send_message(msg, nickname)
+                    print(nickname + ": " + msg.decode())
             except:
                 connection.close()
 
                 #remove user from users list
                 del(self.clients[nickname])
-
+                self.send_onlineClients()
                 break
 
         print(nickname, " disconnected")
@@ -52,7 +67,14 @@ class Server(object):
                 if nickname != sender:
                     msg = sender + ": " + message.decode()
                     self.clients[nickname].send(msg.encode())
-
+    def send_onlineClients(self):
+        if len(self.clients) > 0:
+            msg=""
+            for nickname in self.clients:
+                    msg = msg+"+ "+nickname+"-"+str(self.clients[nickname].getpeername())+"*"
+            print(msg)
+            for nickname in self.clients:
+                      self.clients[nickname].send(msg.encode())
 
 if __name__ == "__main__":
     port = 5555
