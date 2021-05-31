@@ -1,25 +1,25 @@
 from PyQt5 import QtCore, QtGui, QtWidgets
 
-class Ui_Form(object):
+class Ui_Form_Private(object):
     def emojiBox(self,Form):
         self.pushButtonSmail = QtWidgets.QPushButton(Form)
-        self.pushButtonSmail.setGeometry(QtCore.QRect(10,370, 30, 30))
+        self.pushButtonSmail.setGeometry(QtCore.QRect(10, 370, 30, 30))
         self.pushButtonSmail.setObjectName("😂")
         self.pushButtonHeartFace = QtWidgets.QPushButton(Form)
-        self.pushButtonHeartFace .setGeometry(QtCore.QRect(10,410, 30, 30))
-        self.pushButtonHeartFace .setObjectName("😍")
+        self.pushButtonHeartFace.setGeometry(QtCore.QRect(10, 410, 30, 30))
+        self.pushButtonHeartFace.setObjectName("😍")
         self.pushButtonTaxi = QtWidgets.QPushButton(Form)
         self.pushButtonTaxi.setGeometry(QtCore.QRect(10, 450, 30, 30))
         self.pushButtonTaxi.setObjectName("🚕")
-        #2.layout
+        # 2.layout
         self.pushButtonGlassFace = QtWidgets.QPushButton(Form)
-        self.pushButtonGlassFace.setGeometry(QtCore.QRect(45,370, 30, 30))
+        self.pushButtonGlassFace.setGeometry(QtCore.QRect(45, 370, 30, 30))
         self.pushButtonGlassFace.setObjectName("😎")
         self.pushButtonStarFace = QtWidgets.QPushButton(Form)
         self.pushButtonStarFace.setGeometry(QtCore.QRect(45, 410, 30, 30))
         self.pushButtonStarFace.setObjectName("🤩")
         self.pushButtonRoket = QtWidgets.QPushButton(Form)
-        self.pushButtonRoket.setGeometry(QtCore.QRect(45,450, 30, 30))
+        self.pushButtonRoket.setGeometry(QtCore.QRect(45, 450, 30, 30))
         self.pushButtonRoket.setObjectName("🚀")
         # 3.layout
         self.pushButtonGozK = QtWidgets.QPushButton(Form)
@@ -29,9 +29,9 @@ class Ui_Form(object):
         self.pushButtonTongue.setGeometry(QtCore.QRect(80, 410, 30, 30))
         self.pushButtonTongue.setObjectName("😋")
         self.pushButtonHandS = QtWidgets.QPushButton(Form)
-        self.pushButtonHandS .setGeometry(QtCore.QRect(80, 450, 30, 30))
-        self.pushButtonHandS .setObjectName("👋")
-        #4.layout
+        self.pushButtonHandS.setGeometry(QtCore.QRect(80, 450, 30, 30))
+        self.pushButtonHandS.setObjectName("👋")
+        # 4.layout
         self.pushButtonGa = QtWidgets.QPushButton(Form)
         self.pushButtonGa.setGeometry(QtCore.QRect(115, 370, 30, 30))
         self.pushButtonGa.setObjectName("🙄")
@@ -87,24 +87,29 @@ class Ui_Form(object):
         Form.setObjectName("Form")
         Form.resize(1000, 800)
         self.pushButton = QtWidgets.QPushButton(Form)
-        self.pushButton.setGeometry(QtCore.QRect(10, 590, 300, 28))
-        self.pushButton.setObjectName("pushButton")
+        self.pushButton.setGeometry(QtCore.QRect(10, 590, 300, 30))
+        self.pushButton.setObjectName("pushButton1")
+        self.pushButtonSelect = QtWidgets.QPushButton(Form)
+        self.pushButtonSelect.setGeometry(QtCore.QRect(10, 630, 100, 30))
+        self.pushButtonSelect.setObjectName("pushButton2")
+        self.pushButtonSend = QtWidgets.QPushButton(Form)
+        self.pushButtonSend.setGeometry(QtCore.QRect(220, 630, 100, 30))
+        self.pushButtonSend.setObjectName("pushButton3")
         self.textEdit = QtWidgets.QTextEdit(Form)
         self.textEdit.setGeometry(QtCore.QRect(10, 490, 300, 87))
         self.textEdit.setObjectName("textEdit")
         self.textBrowser = QtWidgets.QTextBrowser(Form)
         self.textBrowser.setGeometry(QtCore.QRect(10, 10, 300, 350))
-        self.textBrowser.setObjectName("textBrowser")
-        self.textBrowser2 = QtWidgets.QTextBrowser(Form)
-        self.textBrowser2.setGeometry(QtCore.QRect(320,20, 300, 350))
-        self.textBrowser2.setObjectName("textBrowser")
-
         self.vbox = QtWidgets.QVBoxLayout(Form)
+        self.turnBackButton = QtWidgets.QPushButton(Form)
+        self.turnBackButton.setGeometry(QtCore.QRect(320,10, 150, 50))
+        self.turnBackButton.setObjectName("turnBackButton")
+        #self.vbox.addStretch(1)
         self.vbox.setAlignment(QtCore.Qt.AlignCenter)
+        #self.hbox.setGeometry(QtCore.QRect(650, 20, 600, 250))
         self.vbox.setObjectName("hbox")
         self.emojiBox(Form)
-        btn = QtWidgets.QPushButton()
-        btn.setMinimumSize(150, 30)
+
 
 
 
@@ -117,10 +122,10 @@ class Ui_Form(object):
     def retranslateUi(self, Form):
         _translate = QtCore.QCoreApplication.translate
         Form.setWindowTitle(_translate("Form", "Form"))
-
         self.pushButton.setText(_translate("Form", "Send 🗯"))
-
-
+        self.pushButtonSelect.setText(_translate("Form", "Select File 📁"))
+        self.pushButtonSend.setText(_translate("Form", "Send File ⏫"))
+        self.turnBackButton.setText(_translate("Form", "Turn Back ⍇"))
         self.pushButtonSmail.setText(_translate("Form", "😂"))
         self.pushButtonHeartFace.setText(_translate("Form", "😍"))
         self.pushButtonTaxi.setText(_translate("Form", "🚕"))

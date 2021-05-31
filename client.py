@@ -1,19 +1,22 @@
 from functools import partial
 
 from PyQt5 import QtCore, QtWidgets
+from PyQt5.QtWidgets import QFileDialog
 import client_ui
 import connect_ui
+import private_ui
 import time
 import sys
 import socket
 import random
 
 from PyQt5.QtWidgets import QMessageBox
+from PyQt5.uic.properties import QtGui
 
 
 class ReceiveThread(QtCore.QThread):
     signal = QtCore.pyqtSignal(str)
-    signal2 = QtCore.pyqtSignal(str)
+
     def __init__(self, client_socket):
         super(ReceiveThread, self).__init__()
         self.client_socket = client_socket
@@ -24,19 +27,22 @@ class ReceiveThread(QtCore.QThread):
 
     def receive_message(self):
         message = self.client_socket.recv(1024)
-        message = message.decode()
+        message = message.decode('utf-8', 'ignore')
 
-        #print(message)
+        # print(message)
         self.signal.emit(message)
 
     def receive_clientOnline(self):
         message = self.client_socket.recv(1024)
-        message = message.decode()
+        message = message.decode('utf-8', 'ignore')
+
 
 class Client(object):
-    buttonList=[]
-    send_message_clientName="client_xyz-"
+    buttonList = []
+    send_message_clientName = "client_xyz-"
     nickname = ""
+    fileName = ""
+
     def buttonListi(self):
         btn = QtWidgets.QPushButton()
         btn.setMinimumSize(150, 30)
@@ -59,18 +65,18 @@ class Client(object):
         self.buttonList.append(btn3)
         self.buttonList.append(btn4)
         self.buttonList.append(btn5)
+
     def __init__(self):
         self.messages = []
-        self.takedClints=[]
+        self.takedClints = []
         self.mainWindow = QtWidgets.QMainWindow()
         self.buttonListi()
 
         # add widgets to the application window
         self.connectWidget = QtWidgets.QWidget(self.mainWindow)
         self.chatWidget = QtWidgets.QWidget(self.mainWindow)
-
-
-
+        self.privateChatWidget = QtWidgets.QWidget(self.mainWindow)
+        self.fileDir = QFileDialog(self.mainWindow)
 
         self.connect_ui = connect_ui.Ui_Form()
         self.connect_ui.setupUi(self.connectWidget)
@@ -80,13 +86,181 @@ class Client(object):
         self.chat_ui = client_ui.Ui_Form()
         self.chat_ui.setupUi(self.chatWidget)
         self.chat_ui.pushButton.clicked.connect(self.send_message)
-
-
-
+        self.emojilerChat()
+        self.privateChatWidget.setHidden(True)
+        self.chat_ui_private = private_ui.Ui_Form_Private()
+        self.chat_ui_private.setupUi(self.privateChatWidget)
+        self.chat_ui_private.pushButton.clicked.connect(self.send_message_private2)
+        self.chat_ui_private.pushButtonSelect.clicked.connect(self.selectFile)
+        self.chat_ui_private.pushButtonSend.clicked.connect(self.sendFile)
+        self.chat_ui_private.turnBackButton.clicked.connect(self.turnBackButtonsAction)
+        self.emojiler_private()
         self.mainWindow.setGeometry(QtCore.QRect(1080, 20, 800, 800))
+        self.mainWindow.setWindowTitle("Client1")
         self.mainWindow.show()
 
         self.tcp_client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+
+    def turnBackButtonsAction(self):
+        self.connectWidget.setHidden(True)
+        self.chatWidget.setVisible(True)
+        self.privateChatWidget.setHidden(True)
+        message = "private_out_talking"
+        self.tcp_client.send(message.encode('utf-8'))
+
+    def emojiTextChat(self, action):
+
+        self.chat_ui.textEdit.append(action)
+
+    def emojiText(self, action):
+        self.chat_ui_private.textEdit.append(action)
+
+    def emojilerChat(self):
+        self.chat_ui.pushButtonSmail.clicked.connect(
+            partial(self.emojiTextChat, action=self.chat_ui.pushButtonSmail.text()))
+        self.chat_ui.pushButtonHeartFace.clicked.connect(
+            partial(self.emojiTextChat, action=self.chat_ui.pushButtonHeartFace.text()))
+        self.chat_ui.pushButtonTaxi.clicked.connect(
+            partial(self.emojiTextChat, action=self.chat_ui.pushButtonTaxi.text()))
+        # Layout2
+        self.chat_ui.pushButtonGlassFace.clicked.connect(
+            partial(self.emojiTextChat, action=self.chat_ui.pushButtonGlassFace.text()))
+        self.chat_ui.pushButtonStarFace.clicked.connect(
+            partial(self.emojiTextChat, action=self.chat_ui.pushButtonStarFace.text()))
+        self.chat_ui.pushButtonRoket.clicked.connect(
+            partial(self.emojiTextChat, action=self.chat_ui.pushButtonRoket.text()))
+        # Layout3
+        self.chat_ui.pushButtonGozK.clicked.connect(
+            partial(self.emojiTextChat, action=self.chat_ui.pushButtonGozK.text()))
+        self.chat_ui.pushButtonTongue.clicked.connect(
+            partial(self.emojiTextChat, action=self.chat_ui.pushButtonTongue.text()))
+        self.chat_ui.pushButtonHandS.clicked.connect(
+            partial(self.emojiTextChat, action=self.chat_ui.pushButtonHandS.text()))
+        self.chat_ui.pushButtonHandSOK.clicked.connect(
+            partial(self.emojiTextChat, action=self.chat_ui.pushButtonHandSOK.text()))
+        self.chat_ui.pushButtonHandSW.clicked.connect(
+            partial(self.emojiTextChat, action=self.chat_ui.pushButtonHandSW.text()))
+        self.chat_ui.pushButtonHandSa.clicked.connect(
+            partial(self.emojiTextChat, action=self.chat_ui.pushButtonHandSa.text()))
+        self.chat_ui.pushButtonHeartB.clicked.connect(
+            partial(self.emojiTextChat, action=self.chat_ui.pushButtonHeartB.text()))
+        self.chat_ui.pushButtonHeartBr.clicked.connect(
+            partial(self.emojiTextChat, action=self.chat_ui.pushButtonHeartBr.text()))
+        self.chat_ui.pushButtonHug.clicked.connect(
+            partial(self.emojiTextChat, action=self.chat_ui.pushButtonHug.text()))
+        self.chat_ui.pushButtonStrong.clicked.connect(
+            partial(self.emojiTextChat, action=self.chat_ui.pushButtonStrong.text()))
+        self.chat_ui.pushButtonComp.clicked.connect(
+            partial(self.emojiTextChat, action=self.chat_ui.pushButtonComp.text()))
+        self.chat_ui.pushButtonAngle.clicked.connect(
+            partial(self.emojiTextChat, action=self.chat_ui.pushButtonAngle.text()))
+        self.chat_ui.pushButtonRose.clicked.connect(
+            partial(self.emojiTextChat, action=self.chat_ui.pushButtonRose.text()))
+        self.chat_ui.pushButtonHmm.clicked.connect(
+            partial(self.emojiTextChat, action=self.chat_ui.pushButtonHmm.text()))
+        self.chat_ui.pushButtonFire.clicked.connect(
+            partial(self.emojiTextChat, action=self.chat_ui.pushButtonFire.text()))
+        self.chat_ui.pushButtonHan.clicked.connect(
+            partial(self.emojiTextChat, action=self.chat_ui.pushButtonHan.text()))
+        self.chat_ui.pushButtonGa.clicked.connect(
+            partial(self.emojiTextChat, action=self.chat_ui.pushButtonGa.text()))
+        self.chat_ui.pushButtonSad.clicked.connect(
+            partial(self.emojiTextChat, action=self.chat_ui.pushButtonSad.text()))
+
+    def emojiler_private(self):
+        # Layout1
+        self.chat_ui_private.pushButtonSmail.clicked.connect(
+            partial(self.emojiText, action=self.chat_ui_private.pushButtonSmail.text()))
+        self.chat_ui_private.pushButtonHeartFace.clicked.connect(
+            partial(self.emojiText, action=self.chat_ui_private.pushButtonHeartFace.text()))
+        self.chat_ui_private.pushButtonTaxi.clicked.connect(
+            partial(self.emojiText, action=self.chat_ui_private.pushButtonTaxi.text()))
+        # Layout2
+        self.chat_ui_private.pushButtonGlassFace.clicked.connect(
+            partial(self.emojiText, action=self.chat_ui_private.pushButtonGlassFace.text()))
+        self.chat_ui_private.pushButtonStarFace.clicked.connect(
+            partial(self.emojiText, action=self.chat_ui_private.pushButtonStarFace.text()))
+        self.chat_ui_private.pushButtonRoket.clicked.connect(
+            partial(self.emojiText, action=self.chat_ui_private.pushButtonRoket.text()))
+        # Layout3
+        self.chat_ui_private.pushButtonGozK.clicked.connect(
+            partial(self.emojiText, action=self.chat_ui_private.pushButtonGozK.text()))
+        self.chat_ui_private.pushButtonTongue.clicked.connect(
+            partial(self.emojiText, action=self.chat_ui_private.pushButtonTongue.text()))
+        self.chat_ui_private.pushButtonHandS.clicked.connect(
+            partial(self.emojiText, action=self.chat_ui_private.pushButtonHandS.text()))
+        self.chat_ui_private.pushButtonHandSOK.clicked.connect(
+            partial(self.emojiText, action=self.chat_ui_private.pushButtonHandSOK.text()))
+        self.chat_ui_private.pushButtonHandSW.clicked.connect(
+            partial(self.emojiText, action=self.chat_ui_private.pushButtonHandSW.text()))
+        self.chat_ui_private.pushButtonHandSa.clicked.connect(
+            partial(self.emojiText, action=self.chat_ui_private.pushButtonHandSa.text()))
+        self.chat_ui_private.pushButtonHeartB.clicked.connect(
+            partial(self.emojiText, action=self.chat_ui_private.pushButtonHeartB.text()))
+        self.chat_ui_private.pushButtonHeartBr.clicked.connect(
+            partial(self.emojiText, action=self.chat_ui_private.pushButtonHeartBr.text()))
+        self.chat_ui_private.pushButtonHug.clicked.connect(
+            partial(self.emojiText, action=self.chat_ui_private.pushButtonHug.text()))
+        self.chat_ui_private.pushButtonStrong.clicked.connect(
+            partial(self.emojiText, action=self.chat_ui_private.pushButtonStrong.text()))
+        self.chat_ui_private.pushButtonComp.clicked.connect(
+            partial(self.emojiText, action=self.chat_ui_private.pushButtonComp.text()))
+        self.chat_ui_private.pushButtonAngle.clicked.connect(
+            partial(self.emojiText, action=self.chat_ui_private.pushButtonAngle.text()))
+        self.chat_ui_private.pushButtonRose.clicked.connect(
+            partial(self.emojiText, action=self.chat_ui_private.pushButtonRose.text()))
+        self.chat_ui_private.pushButtonHmm.clicked.connect(
+            partial(self.emojiText, action=self.chat_ui_private.pushButtonHmm.text()))
+        self.chat_ui_private.pushButtonFire.clicked.connect(
+            partial(self.emojiText, action=self.chat_ui_private.pushButtonFire.text()))
+        self.chat_ui_private.pushButtonHan.clicked.connect(
+            partial(self.emojiText, action=self.chat_ui_private.pushButtonHan.text()))
+        self.chat_ui_private.pushButtonGa.clicked.connect(
+            partial(self.emojiText, action=self.chat_ui_private.pushButtonGa.text()))
+        self.chat_ui_private.pushButtonSad.clicked.connect(
+            partial(self.emojiText, action=self.chat_ui_private.pushButtonSad.text()))
+
+    def selectFile(self):
+        # self.fileDir.setVisible(True)
+        self.fileName = self.fileDir.getOpenFileName(self.fileDir, 'Open file', '.')
+        # self.myTextBox.setText(fileName)
+        try:
+            self.fileName = str(self.fileName)
+            self.fileName = self.fileName.split(",")
+            self.fileName = self.fileName[0][2:len(self.fileName[0]) - 1]
+            print(self.fileName)
+
+        except Exception:
+            print(Exception)
+        # self.fileDir.setHidden(True)
+
+    def sendFile(self):
+        sentence = "SEND"
+
+        self.tcp_client.send(sentence.encode('utf-8'))
+        print(self.fileName)
+        self.tcp_client.send(self.fileName.encode('utf-8'))
+        time.sleep(1)
+
+        print('Sending file to server...')
+        message = 'BEGIN'
+
+        self.tcp_client.send(message.encode('utf-8'))
+        time.sleep(1)
+        with open(self.fileName, 'rb') as f:
+            while True:
+
+                data = f.read(2048)
+                print("data= ", data.decode(encoding='utf-8', errors='ignore'))
+                self.tcp_client.send(data)
+
+                if not data:
+                    print('Breaking from sending data')
+                    break
+            time.sleep(1)
+            message = 'ENDED'
+            self.tcp_client.send(message.encode('utf-8'))  # I used the same size of the BEGIN token
+            f.close()
 
     def btn_connect_clicked(self):
         host = self.connect_ui.hostTextEdit.toPlainText()
@@ -111,26 +285,28 @@ class Client(object):
 
         self.nickname = self.nickname + "_" + str(random.randint(1, port))
 
-        if self.connect(host, port,self.nickname):
+        if self.connect(host, port, self.nickname):
             self.connectWidget.setHidden(True)
             self.chatWidget.setVisible(True)
-
+            self.mainWindow.setWindowTitle(str(self.nickname))
             self.recv_thread = ReceiveThread(self.tcp_client)
             self.recv_thread.signal.connect(self.show_message)
             self.recv_thread.start()
             print("[INFO] recv thread started")
 
-    def clearLayout(self,layout):
+    def clearLayout(self, layout):
         while layout.count():
             child = layout.takeAt(0)
             if child.widget():
                 child.widget().deleteLater()
-    def show_message(self, message):
 
-        if message[0:2]=='+ ':
-            i=0
+    def show_message(self, message):
+        print("gelen mesaj:", message)
+
+        if message[0:2] == '+ ':
+            i = 0
             print(message)
-            print(self.chat_ui.vbox.isEmpty(),"  i=" ,i)
+            print(self.chat_ui.vbox.isEmpty(), "  i=", i)
             '''
             while self.chat_ui.vbox.isEmpty()!=True:
                 widgetToRemove = self.chat_ui.vbox.itemAt(i).widget()
@@ -143,41 +319,89 @@ class Client(object):
             self.clearLayout(self.chat_ui.vbox)
             self.buttonListi()
             self.chat_ui.textBrowser2.clear()
-            #self.chat_ui.vbox
-            message=str(message).split("*")
-            for i in range(len(message)-1):
-                strmessage=str(message[i])
+            # self.chat_ui.vbox
+            message = str(message).split("*")
+            for i in range(len(message) - 1):
+                strmessage = str(message[i])
                 messageNickAndPorts = message[i].split("-")
                 nicks = messageNickAndPorts[0][2:]
                 ports = messageNickAndPorts[1]
                 self.buttonList[i].setVisible(True)
                 self.buttonList[i].setText(nicks)
-                self.buttonList[i].clicked.connect(partial(self.printName,action=strmessage))
+                self.buttonList[i].clicked.connect(partial(self.printName, action=strmessage))
                 self.chat_ui.textBrowser2.append(message[i])
                 self.chat_ui.vbox.addWidget(self.buttonList[i])
 
-
             print("bitti")
-        elif message=="question_xyz":
-          print("istek geldi")
-          self.showdialog()
+        elif message == "question_xyz":
+            print("istek geldi")
+            self.showdialog()
+        elif message == "not_accept_xyz":
+            self.showdialogNotAccept()
+        elif message == "private_out_talking":
+            print("private_out_talkingi algıladı")
+            self.showdialogTalkingOut()
+        elif message == "GET":
+
+            print('Get içine girdi dosya adı yollanması bekleniyor')
+            yenigelen = self.tcp_client.recv(1024)
+            file_names = yenigelen.decode('utf-8', 'ignore')
+            print("serverdam gelenler =", yenigelen.decode('utf-8', 'ignore'))
+            print("filename= ", file_names)
+            file_names = "client_" + str(file_names)
+            print("file name altı")
+            f = open(file_names, "wb")
+            print('Receiving file from client..')
+
+            while True:
+                try:
+                    data = self.tcp_client.recv(2048)
+                    print('sonraki gelen data decode=', data.decode('utf-8', 'ignore'))
+                    if data.decode('utf-8', 'ignore') == 'BEGIN':
+                        print("begine girdi")
+                        continue
+                    elif data.decode('utf-8', 'ignore') == 'ENDED':
+                        print('Breaking from file write')
+                        break
+                    elif not data:
+                        print('data yok')
+                        break
+                    else:
+
+                        f.write(data)
+                        print('Wrote to file', data.decode('utf-8', 'ignore'))
+                    print("data bekleniyor")
+
+                except Exception:
+
+                    print(Exception.args)
+
+            f.close()
+            print("burada bitiyor")
+            print('Done receiving file')
+
+        elif (message[0:12] == "private_xyz*"):
+            self.chat_ui_private.textBrowser.append(message[12:])
+        elif message == "match_xyz":
+            self.connectWidget.setHidden(True)
+            self.chatWidget.setHidden(True)
+            self.privateChatWidget.setVisible(True)
         else:
             self.chat_ui.textBrowser.append(message)
 
-    def printName(self,action):
+    def printName(self, action):
         messageNickAndPorts = action.split("-")
         nicks = messageNickAndPorts[0][2:]
         ports = messageNickAndPorts[1]
         send_message_clientName = "client_xyz-" + str(nicks)
-        print(send_message_clientName == ("client_xyz-"+str(self.nickname)),"send message name=",send_message_clientName
-              ,"client name =", "client_xyz_+ "+str(self.nickname))
-        if send_message_clientName == ("client_xyz-"+str(self.nickname)):
-                 print("say noo")
+        print(send_message_clientName == ("client_xyz-" + str(self.nickname)), "send message name=",
+              send_message_clientName
+              , "client name =", "client_xyz_+ " + str(self.nickname))
+        if send_message_clientName == ("client_xyz-" + str(self.nickname)):
+            print("say noo")
         else:
-           print(send_message_clientName)
-           self.send_message_private(send_message_clientName)
-
-
+            print(send_message_clientName)
+            self.send_message_private(send_message_clientName)
 
     def connect(self, host, port, nickname):
 
@@ -210,7 +434,23 @@ class Client(object):
             print("[INFO]", error)
             self.show_error("Server Error", error)
         self.chat_ui.textEdit.clear()
-    def send_message_private(self,sender):
+
+    def send_message_private2(self):
+        messager = self.chat_ui_private.textEdit.toPlainText()
+        self.chat_ui_private.textBrowser.append("Me: " + messager)
+        messager = "private_xyz*" + messager
+
+        print("sent: " + messager)
+
+        try:
+            self.tcp_client.send(messager.encode())
+        except Exception as e:
+            error = "Unable to send message '{}'".format(str(e))
+            print("[INFO]", error)
+            self.show_error("Server Error", error)
+        self.chat_ui_private.textEdit.clear()
+
+    def send_message_private(self, sender):
         try:
             self.tcp_client.send(sender.encode())
         except Exception as e:
@@ -225,28 +465,70 @@ class Client(object):
         errorDialog.setStandardButtons(QtWidgets.QMessageBox.Ok)
         errorDialog.exec_()
 
-    def showdialog(self):
+    def showdialogTalkingOut(self):
+
         self.msg = QMessageBox()
         self.msg.setIcon(QMessageBox.Information)
-
-        self.msg.setText("This is a message box")
-        self.msg.setInformativeText("This is additional information")
-        self.msg.setWindowTitle("MessageBox demo")
-        self.msg.setDetailedText("The details are as follows:")
-        self.msg.setStandardButtons(QMessageBox.Ok | QMessageBox.Cancel)
-        self.msg.buttonClicked.connect(self.msgbtn)
-
+        self.msgt.setWindowTitle("Bilgilendirme")
+        self.msgt.setDetailedText("")
+        self.msg.setText("Karşı Taraf Konuşmadan ayrıldı ")
+        self.msg.setInformativeText("Ok tuşuna basarak ana chat menüye dönebilirsiniz")
+        print("msgBtnTalkingOuta girdi")
+        self.msg.setStandardButtons(QMessageBox.Ok)
+        self.msg.buttonClicked.connect(self.msgbtnTalking)
         retval = self.msg.exec_()
-        print( "value of pressed message box button:", retval)
+        print("value of pressed message box button:", retval)
 
-    def msgbtn(self,i):
-        print ("Button pressed is:", i.text())
-        if(i.text()=="OK"):
-          self.send_message_private("accept_xyz")
-          #yeniSayfaKurulacakBurada
+    def msgbtnTalking(self):
+        print("msgBtnTalkingOuta girdi")
+        self.connectWidget.setHidden(True)
+        self.chatWidget.setVisible(True)
+        self.privateChatWidget.setHidden(True)
+
+    def showdialog(self):
+
+        self.msgt = QMessageBox()
+        self.msgt.setIcon(QMessageBox.Information)
+
+        self.msgt.setText("This is a message box")
+        self.msgt.setInformativeText("This is additional information")
+        self.msgt.setWindowTitle("MessageBox demo")
+        self.msgt.setDetailedText("The details are as follows:")
+        self.msgt.setStandardButtons(QMessageBox.Ok | QMessageBox.Cancel)
+        self.msgt.buttonClicked.connect(self.msgbtn)
+
+        retval = self.msgt.exec_()
+        print("value of pressed message box button:", retval)
+
+
+
+    def msgbtn(self, i):
+        print("Button pressed is:", i.text())
+        if (i.text() == "OK"):
+            self.send_message_private("accept_xyz")
+            self.connectWidget.setHidden(True)
+            self.chatWidget.setHidden(True)
+            self.privateChatWidget.setVisible(True)
+            # yeniSayfaKurulacakBurada
         else:
-          self.send_message_private("not_accept_xyz")
-          #devamke  sadece diğer tarafa bilgilendirme mesaji
+            self.send_message_private("not_accept_xyz")
+            # devamke  sadece diğer tarafa bilgilendirme mesaji
+
+    def showdialogNotAccept(self):
+        self.msgr = QMessageBox()
+        self.msgr.setIcon(QMessageBox.Information)
+
+        self.msgr.setText("İsteğiniz Kabul edilmedi")
+        self.msgr.setInformativeText("İsteğiniz gönderdiğiniz kişi tarafından kabul edilmedi")
+        self.msgr.setWindowTitle("Bilgilendirme")
+        self.msgr.setDetailedText(
+            "İsteğiniz gönderdiğiniz kişi tarafından kabul edilmedi tekrar göndermek isterseniz tekrar tıklayabilirsiniz")
+        self.msgr.setStandardButtons(QMessageBox.Ok)
+
+        retval = self.msgr.exec_()
+        print("value of pressed message box button:", retval)
+
+
 if __name__ == "__main__":
     app = QtWidgets.QApplication(sys.argv)
     c = Client()

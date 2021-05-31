@@ -1,19 +1,22 @@
 from functools import partial
 
 from PyQt5 import QtCore, QtWidgets
+from PyQt5.QtWidgets import QFileDialog
 import client_ui
 import connect_ui
+import private_ui
 import time
 import sys
 import socket
 import random
 
 from PyQt5.QtWidgets import QMessageBox
+from PyQt5.uic.properties import QtGui
 
 
 class ReceiveThread(QtCore.QThread):
     signal = QtCore.pyqtSignal(str)
-    signal2 = QtCore.pyqtSignal(str)
+
     def __init__(self, client_socket):
         super(ReceiveThread, self).__init__()
         self.client_socket = client_socket
@@ -37,6 +40,7 @@ class Client(object):
     buttonList=[]
     send_message_clientName="client_xyz-"
     nickname = ""
+    fileName=""
     def buttonListi(self):
         btn = QtWidgets.QPushButton()
         btn.setMinimumSize(150, 30)
@@ -68,6 +72,8 @@ class Client(object):
         # add widgets to the application window
         self.connectWidget = QtWidgets.QWidget(self.mainWindow)
         self.chatWidget = QtWidgets.QWidget(self.mainWindow)
+        self.privateChatWidget= QtWidgets.QWidget(self.mainWindow)
+        self.fileDir=QFileDialog(self.mainWindow)
 
 
 
@@ -81,12 +87,57 @@ class Client(object):
         self.chat_ui.setupUi(self.chatWidget)
         self.chat_ui.pushButton.clicked.connect(self.send_message)
 
-
-
+        self.privateChatWidget.setHidden(True)
+        self.chat_ui_private = private_ui.Ui_Form_Private()
+        self.chat_ui_private.setupUi(self.privateChatWidget)
+        self.chat_ui_private.pushButton.clicked.connect(self.send_message_private2)
+        self.chat_ui_private.pushButtonSelect.clicked.connect(self.selectFile)
+        self.chat_ui_private.pushButtonSend.clicked.connect(self.sendFile)
         self.mainWindow.setGeometry(QtCore.QRect(1080, 20, 800, 800))
+        self.mainWindow.setWindowTitle("Client3")
         self.mainWindow.show()
 
         self.tcp_client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    def selectFile(self):
+            #self.fileDir.setVisible(True)
+            self.fileName =self.fileDir.getOpenFileName(self.fileDir,'Open file','.')
+            #self.myTextBox.setText(fileName)
+            try:
+              self.fileName=str(self.fileName)
+              self.fileName=self.fileName.split(",")
+              self.fileName=self.fileName[0][2:len(self.fileName[0])-1]
+              print(self.fileName)
+
+            except Exception:
+                print(Exception)
+            #self.fileDir.setHidden(True)
+    def sendFile(self):
+            sentence = "SEND"
+
+            self.tcp_client.send(sentence.encode('utf-8'))
+            print(self.fileName)
+            self.tcp_client.send(self.fileName.encode('utf-8'))
+
+            f = open(self.fileName, "rb")
+
+            print('Sending file to server...')
+            message='BEGIN'
+
+            self.tcp_client.send(message.encode('utf-8'))
+            time.sleep(1)
+            while True:
+                data = f.read(1024)
+                print('Sending data', data.decode('utf-8'))
+                self.tcp_client.send(data)
+                print('Sent data', data.decode('utf-8'))
+                if not data:
+                    print('Breaking from sending data')
+                    break
+            time.sleep(1)
+            message='ENDED'
+            self.tcp_client.send(message.encode('utf-8'))  # I used the same size of the BEGIN token
+            f.close()
+
 
     def btn_connect_clicked(self):
         host = self.connect_ui.hostTextEdit.toPlainText()
@@ -126,6 +177,7 @@ class Client(object):
             if child.widget():
                 child.widget().deleteLater()
     def show_message(self, message):
+        print("gelen mesaj:", message)
 
         if message[0:2]=='+ ':
             i=0
@@ -161,6 +213,46 @@ class Client(object):
         elif message=="question_xyz":
           print("istek geldi")
           self.showdialog()
+        elif message=="GET":
+
+            print('Get içine girdi dosya adı yollanması bekleniyor')
+            yenigelen =self.tcp_client.recv(1024)
+            file_names = yenigelen.decode('utf-8')
+            print("serverdam gelenler =",yenigelen.decode('utf-8'))
+            print("filename= ", file_names)
+            file_names ="client.txt"
+            print("file name altı")
+            f = open(file_names, "wb")
+            print('Receiving file from client..')
+
+            while True:
+                data =self.tcp_client.recv(1024)
+                print('sonraki gelen data decode=', data.decode('utf-8'))
+                if data.decode('utf-8') == 'BEGIN':
+                    print("begine girdi")
+                    continue
+                elif data.decode('utf-8') == 'ENDED':
+                    print('Breaking from file write')
+                    break
+                elif not data:
+                    print('data yok')
+                    break
+                else:
+                    print('Received: ', data.decode('utf-8'))
+                    f.write(data)
+                    print('Wrote to file', data.decode('utf-8'))
+                print("data bekleniyor")
+
+            f.close()
+            print("burada bitiyor")
+            print('Done receiving file')
+
+        elif (message[0:12] == "private_xyz*"):
+            self.chat_ui_private.textBrowser.append(message[12:])
+        elif message == "match_xyz":
+            self.connectWidget.setHidden(True)
+            self.chatWidget.setHidden(True)
+            self.privateChatWidget.setVisible(True)
         else:
             self.chat_ui.textBrowser.append(message)
 
@@ -210,6 +302,22 @@ class Client(object):
             print("[INFO]", error)
             self.show_error("Server Error", error)
         self.chat_ui.textEdit.clear()
+
+    def send_message_private2(self):
+        messager = self.chat_ui_private.textEdit.toPlainText()
+        self.chat_ui_private.textBrowser.append("Me: " + messager)
+        messager="private_xyz*"+messager
+
+        print("sent: " + messager)
+
+        try:
+            self.tcp_client.send(messager.encode())
+        except Exception as e:
+            error = "Unable to send message '{}'".format(str(e))
+            print("[INFO]", error)
+            self.show_error("Server Error", error)
+        self.chat_ui_private.textEdit.clear()
+
     def send_message_private(self,sender):
         try:
             self.tcp_client.send(sender.encode())
@@ -243,6 +351,9 @@ class Client(object):
         print ("Button pressed is:", i.text())
         if(i.text()=="OK"):
           self.send_message_private("accept_xyz")
+          self.connectWidget.setHidden(True)
+          self.chatWidget.setHidden(True)
+          self.privateChatWidget.setVisible(True)
           #yeniSayfaKurulacakBurada
         else:
           self.send_message_private("not_accept_xyz")
