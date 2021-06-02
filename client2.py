@@ -1,7 +1,8 @@
 from functools import partial
 
 from PyQt5 import QtCore, QtWidgets
-from PyQt5.QtWidgets import QFileDialog
+from PyQt5.QtGui import QPalette,QColor
+from PyQt5.QtWidgets import QFileDialog, QVBoxLayout, QFormLayout, QLineEdit, QDialogButtonBox
 import client_ui
 import connect_ui
 import private_ui
@@ -39,6 +40,7 @@ class ReceiveThread(QtCore.QThread):
 
 class Client(object):
     buttonList = []
+    buttonRoomList=[]
     send_message_clientName = "client_xyz-"
     nickname = ""
     fileName = ""
@@ -66,16 +68,44 @@ class Client(object):
         self.buttonList.append(btn4)
         self.buttonList.append(btn5)
 
+    def buttonRoomListi(self):
+        btn = QtWidgets.QPushButton()
+        btn.setMinimumSize(150, 30)
+        btn.setVisible(False)
+
+        btn2 = QtWidgets.QPushButton()
+        btn2.setMinimumSize(150, 30)
+        btn2.setVisible(False)
+        btn3 = QtWidgets.QPushButton()
+        btn3.setMinimumSize(150, 30)
+        btn3.setVisible(False)
+        btn4 = QtWidgets.QPushButton()
+        btn4.setMinimumSize(150, 30)
+        btn4.setVisible(False)
+        btn5 = QtWidgets.QPushButton()
+        btn5.setMinimumSize(150, 30)
+        btn5.setVisible(False)
+        self.buttonRoomList.append(btn)
+        self.buttonRoomList.append(btn2)
+        self.buttonRoomList.append(btn3)
+        self.buttonRoomList.append(btn4)
+        self.buttonRoomList.append(btn5)
+
     def __init__(self):
         self.messages = []
         self.takedClints = []
-        self.mainWindow = QtWidgets.QMainWindow()
         self.buttonListi()
+        self.buttonRoomListi()
+        self.mainWindow = QtWidgets.QMainWindow()
+        palette = QPalette()
+        palette.setColor(QPalette.Window,QColor('red'))
+
+
 
         # add widgets to the application window
         self.connectWidget = QtWidgets.QWidget(self.mainWindow)
         self.chatWidget = QtWidgets.QWidget(self.mainWindow)
-        self.privateChatWidget = QtWidgets.QWidget(self.mainWindow)
+        self.privateChatWidget = QtWidgets.QWidget()
         self.fileDir = QFileDialog(self.mainWindow)
 
         self.connect_ui = connect_ui.Ui_Form()
@@ -86,6 +116,7 @@ class Client(object):
         self.chat_ui = client_ui.Ui_Form()
         self.chat_ui.setupUi(self.chatWidget)
         self.chat_ui.pushButton.clicked.connect(self.send_message)
+        self.chat_ui.pushButtonSetRoom.clicked.connect(self.createRoom)
         self.emojilerChat()
         self.privateChatWidget.setHidden(True)
         self.chat_ui_private = private_ui.Ui_Form_Private()
@@ -94,7 +125,15 @@ class Client(object):
         self.chat_ui_private.pushButtonSelect.clicked.connect(self.selectFile)
         self.chat_ui_private.pushButtonSend.clicked.connect(self.sendFile)
         self.chat_ui_private.turnBackButton.clicked.connect(self.turnBackButtonsAction)
+
+
+
+        self.chat_ui.label1.setPalette(palette)
+        self.chat_ui.label1.setAlignment(QtCore.Qt.AlignCenter)
         self.emojiler_private()
+
+
+
         self.mainWindow.setGeometry(QtCore.QRect(1080, 20, 800, 800))
         self.mainWindow.setWindowTitle("Client1")
         self.mainWindow.show()
@@ -107,6 +146,10 @@ class Client(object):
         self.privateChatWidget.setHidden(True)
         message = "private_out_talking"
         self.tcp_client.send(message.encode('utf-8'))
+    def createRoom(self):
+        print("hello")
+
+
 
     def emojiTextChat(self, action):
 
@@ -288,6 +331,7 @@ class Client(object):
         if self.connect(host, port, self.nickname):
             self.connectWidget.setHidden(True)
             self.chatWidget.setVisible(True)
+            self.buttonRoomListi()
             self.mainWindow.setWindowTitle(str(self.nickname))
             self.recv_thread = ReceiveThread(self.tcp_client)
             self.recv_thread.signal.connect(self.show_message)
@@ -306,18 +350,14 @@ class Client(object):
         if message[0:2] == '+ ':
             i = 0
             print(message)
-            print(self.chat_ui.vbox.isEmpty(), "  i=", i)
-            '''
-            while self.chat_ui.vbox.isEmpty()!=True:
-                widgetToRemove = self.chat_ui.vbox.itemAt(i).widget()
-                self.chat_ui.vbox.removeWidget(widgetToRemove)
-                widgetToRemove.setParent(None)
-                i+=1
-                print("Yapildi ")
-            '''
+            print("vbox1",self.chat_ui.vbox.isEmpty())
+            print("vbox2",self.chat_ui.vbox2.isEmpty())
+            self.buttonRoomList.clear()
             self.buttonList.clear()
             self.clearLayout(self.chat_ui.vbox)
+            self.clearLayout(self.chat_ui.vbox2)
             self.buttonListi()
+            self.buttonRoomListi()
             self.chat_ui.textBrowser2.clear()
             # self.chat_ui.vbox
             message = str(message).split("*")
@@ -329,10 +369,17 @@ class Client(object):
                 self.buttonList[i].setVisible(True)
                 self.buttonList[i].setText(nicks)
                 self.buttonList[i].clicked.connect(partial(self.printName, action=strmessage))
+                self.buttonRoomList[i].setVisible(True)
+                self.buttonRoomList[i].setText(nicks)
+                self.buttonRoomList[i].clicked.connect(partial(self.printName, action=strmessage))
                 self.chat_ui.textBrowser2.append(message[i])
                 self.chat_ui.vbox.addWidget(self.buttonList[i])
+                self.chat_ui.vbox2.addWidget(self.buttonRoomList[i])
+                print("eklendi")
+                print("vbox1", self.chat_ui.vbox.isEmpty(), "  i=", i)
+                print("vbox2", self.chat_ui.vbox2.isEmpty(), "  i=", i)
 
-            print("bitti")
+
         elif message == "question_xyz":
             print("istek geldi")
             self.showdialog()

@@ -5,10 +5,23 @@ import time
 
 class Server(object):
 
+
     def __init__(self, hostname, port):
         self.clients = {}
         self.istekListesi = {}
         self.machList={}
+        self.chatRoomsList={}
+        self.chatRooms=[]
+        self.chatRoom1=[]
+        self.chatRoom2 =[]
+        self.chatRoom3 =[]
+        self.chatRoom4 =[]
+        self.chatRoom5 =[]
+        self.chatRooms.append(self.chatRoom1)
+        self.chatRooms.append(self.chatRoom2)
+        self.chatRooms.append(self.chatRoom3)
+        self.chatRooms.append(self.chatRoom4)
+        self.chatRooms.append(self.chatRoom5)
         # create server socket
         self.tcp_server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.tcp_server.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
@@ -25,6 +38,8 @@ class Server(object):
             nickname = nickname.decode()
             self.clients[nickname] = connection
             self.send_onlineClients()
+            time.sleep(0.3)
+            self.send_onlineChatRoom()
             # start a thread for the client
             threading.Thread(target=self.receive_message, args=(connection, nickname), daemon=True).start()
 
@@ -38,6 +53,59 @@ class Server(object):
                return  i
 
         return -1
+
+    def chatRoomsListFindNick(self,nick):
+
+        gidiciList=[]
+        t = 0
+
+        for i in self.chatRooms:
+
+            if len(i) > 0:
+                r = 0
+                for k in i:
+                    print("len i =", len(i))
+
+                    print("gelen mesaj", nick, "chatrooms in= ", k)
+                    if k == nick:
+                        return t
+                    r=r+1
+            t += 1
+
+        return -1
+    def chatFindChatRoom(self,string):
+
+        k=0
+        for i in self.chatRooms:
+           print("len i =",len(i))
+
+           if len(i)>0:
+             print("gelen mesaj",string,"chatrooms ",str(i[0]))
+             if str(i[0]) ==string:
+               return  k
+           k+=1
+
+        return  -1
+
+    def chatFindChatRoomValue(self, string):
+        compareString=string.split(":")
+
+        t = 0
+
+        for i in self.chatRooms:
+            if len(i) > 0:
+                for k in i:
+                  print("len i =", len(i))
+
+
+                  print("gelen mesaj",compareString[0],"chatrooms in= ", k)
+                  if k == compareString[0]:
+                    return t
+            t += 1
+
+        return -1
+
+
 
     def receive_message(self, connection, nickname):
         print("[INFO] Waiting for messages")
@@ -59,6 +127,72 @@ class Server(object):
                     self.istekListesi[len(self.istekListesi)]=nicks
                     self.machList[nickname]=nicks
                     self.machList[nicks]=nickname
+                elif(message[0:14]== "createroom_xyz"):
+                    #bulurken bunla bulucaz ve i[1] i[2] vs burda nicknameler olucak
+                    for i in self.chatRooms:
+                        if len(i)==0:
+                            i.append(str(message[14:]))
+                            i.append(str(nickname))
+                            break
+
+
+                    # burada gönderenin isminide yazabiliriz aslında
+                    self.chatRoomsList[nickname]=message[14:]
+
+                    print("message {14:] ",message[14:])
+                    messageses="youJoinRoom"
+                    self.clients[nickname].send(messageses.encode('utf-8'))
+                    self.send_onlineChatRoom()
+
+
+                elif (message[0:20]== "join_createdroom_xyz"):
+                     #you Join room send
+                    realMessage=message[24:]
+                    print("real message is",realMessage)
+
+                    returnedValue=self.chatFindChatRoom(realMessage)
+                    print("returnedValue is", returnedValue)
+                    if (returnedValue == -1):
+                        print("return -1")
+                    else:
+                        lengthChatRoom = len(self.chatRooms[returnedValue])
+                        self.chatRooms[returnedValue].append(nickname)
+                        for t in self.chatRooms[returnedValue]:
+                          print(t)
+                    self.clients[nickname].send("youJoinRoom".encode('utf-8'))
+
+
+
+                elif message == "chatroom_turnback*":
+                    print("chatroom_trunback* çalıştı")
+                    value1= self.chatRoomsListFindNick(nickname)
+                    print("value= ",value1)
+                    if value1 == -1:
+                        print("böyle bir isim bulunamadı")
+                    else:
+                        #print("self tarafı=",self.chatRooms[value1][nickname])
+                        self.chatRooms[value1].remove(nickname)
+                        messages = "turnBackSignal*"
+                        self.clients[nickname].send(messages.encode('utf-8'))
+
+
+
+                elif (message[0:20] == "chatroomMessage_xyz*"):
+                    # you Join room send
+                    realMessage = message[20:]
+                    value=self.chatFindChatRoomValue(realMessage)
+
+                    print("returnedValue is", value)
+                    if (value == -1):
+                        print("return -1")
+                    else:
+                        for t in self.chatRooms[value]:
+                            print(t)
+                        self.send_chatRoomMessage(value,message,nickname)
+
+
+
+
 
                 elif (message[0:12] == "private_xyz*"):
 
@@ -198,6 +332,16 @@ class Server(object):
                 connection.close()
 
                 #remove user from users list
+                print("disconnect öncesi silme işlemi yapıldı")
+                value1 = self.chatRoomsListFindNick(nickname)
+                print("value= ", value1)
+                if value1 == -1:
+                    ##eğer özel chat roomdaysa silme işlemini yapıyoruz.
+                    print("böyle bir isim bulunamadı")
+                else:
+                    # print("self tarafı=",self.chatRooms[value1][nickname])
+                    self.chatRooms[value1].remove(nickname)
+
                 del(self.clients[nickname])
                 self.send_onlineClients()
                 break
@@ -210,7 +354,7 @@ class Server(object):
             for nickname in self.clients:
                 if nickname != sender:
                     msg = sender + ": " + message.decode()
-                    self.clients[nickname].send(msg.encode())
+                    self.clients[nickname].send(msg.encode('utf-8'))
     def send_onlineClients(self):
         if len(self.clients) > 0:
             msg=""
@@ -218,7 +362,25 @@ class Server(object):
                     msg = msg+"+ "+nickname+"-"+str(self.clients[nickname].getpeername())+"*"
             print(msg)
             for nickname in self.clients:
-                      self.clients[nickname].send(msg.encode())
+                      self.clients[nickname].send(msg.encode('utf-8'))
+    def send_onlineChatRoom(self):
+        if len(self.clients) > 0:
+            msg=""
+            for nicknames in self.chatRoomsList:
+                    msg += "^+^ "+self.chatRoomsList[nicknames]+"*"
+
+            print("meesage=", msg)
+            for nickname in self.clients:
+
+                      self.clients[nickname].send(msg.encode('utf-8'))
+
+    def send_chatRoomMessage(self,value,message,nickname):
+        if len(self.clients) > 0:
+            print("send chatRoomMessage=", message," Length :",len(self.chatRooms[value]))
+            for nick in range(1,len(self.chatRooms[value])):
+                print("birinci taraf",self.chatRooms[value][nick],"ikinci taraf",nickname)
+                if self.chatRooms[value][nick]!=nickname:
+                   self.clients[self.chatRooms[value][nick]].send(message.encode('utf-8'))
 
     def send_messageAccept(self, message, nickname):
                     self.clients[nickname].send(message.encode('utf-8'))
