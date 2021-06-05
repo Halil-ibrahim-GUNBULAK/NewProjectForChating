@@ -1,7 +1,7 @@
 from functools import partial
 
 from PyQt5 import QtCore, QtWidgets
-from PyQt5.QtGui import QPalette,QColor
+from PyQt5.QtGui import QPalette, QColor
 from PyQt5.QtWidgets import QFileDialog, QVBoxLayout, QFormLayout, QLineEdit, QDialogButtonBox
 import client_ui
 import connect_ui
@@ -15,9 +15,8 @@ from PyQt5.QtWidgets import QMessageBox
 from PyQt5.uic.properties import QtGui
 
 
-
-
 class ReceiveThread(QtCore.QThread):
+
     signal = QtCore.pyqtSignal(str)
 
     def __init__(self, client_socket):
@@ -42,7 +41,7 @@ class ReceiveThread(QtCore.QThread):
 
 class Client(object):
     buttonList = []
-    buttonRoomList=[]
+    buttonRoomList = []
     send_message_clientName = "client_xyz-"
     nickname = ""
     fileName = ""
@@ -94,37 +93,31 @@ class Client(object):
         self.buttonRoomList.append(btn10)
 
     def __init__(self):
-        self.messages = []
-        self.takedClints = []
-        self.buttonListi()
-        self.buttonRoomListi()
-        self.mainWindow = QtWidgets.QMainWindow()
-        palette = QPalette()
-        palette.setColor(QPalette.Window,QColor('red'))
-
-
+        self.messages = [] #chat message keeping list
+        self.takedClints = []#client message keeping list
+        self.buttonListi() #manuel Clients add to be button
+        self.buttonRoomListi()#manuel roomList add to be button
+        self.mainWindow = QtWidgets.QMainWindow()#we create  1 main window
+        palette = QPalette()               #Qpalette using set Color
+        palette.setColor(QPalette.Window, QColor('red'))
 
         # add widgets to the application window
-        self.connectWidget = QtWidgets.QWidget(self.mainWindow)
+        self.connectWidget = QtWidgets.QWidget(self.mainWindow) # main window connect all my widget's
         self.chatWidget = QtWidgets.QWidget(self.mainWindow)
         self.privateChatWidget = QtWidgets.QWidget(self.mainWindow)
-        self.chatRoomWidget=QtWidgets.QWidget(self.mainWindow)
-        self.fileDir = QFileDialog(self.mainWindow)
+        self.chatRoomWidget = QtWidgets.QWidget(self.mainWindow)
+        self.fileDir = QFileDialog(self.mainWindow) #file select gui just use private chat message
 
-        self.connect_ui = connect_ui.Ui_Form()
+        self.connect_ui = connect_ui.Ui_Form()       # we set our codes, we install them
         self.connect_ui.setupUi(self.connectWidget)
         self.connect_ui.pushButton.clicked.connect(self.btn_connect_clicked)
 
         self.chatRoomWidget.setHidden(True)
-        self.chat_room_ui=Ui_Form_chatRoom()
+        self.chat_room_ui = Ui_Form_chatRoom()
         self.chat_room_ui.setupUi(self.chatRoomWidget)
         self.chat_room_ui.pushButton.clicked.connect(self.send_message_ChatRoom)
         self.chat_room_ui.turnBackButton.clicked.connect(self.turnBackMessage)
-        self.emojiler_chatRoom()
-
-
-
-
+        self.emojiler_chatRoom() # emoji adds for chatRoom
 
         self.chatWidget.setHidden(True)
         self.chat_ui = client_ui.Ui_Form()
@@ -132,7 +125,7 @@ class Client(object):
         self.chat_ui.pushButton.clicked.connect(self.send_message)
         self.chat_ui.pushButtonSetRoom.clicked.connect(self.createRoom)
 
-        self.emojilerChat()
+        self.emojilerChat()# emoji adds for chat
 
         self.privateChatWidget.setHidden(True)
         self.chat_ui_private = private_ui.Ui_Form_Private()
@@ -142,46 +135,42 @@ class Client(object):
         self.chat_ui_private.pushButtonSend.clicked.connect(self.sendFile)
         self.chat_ui_private.turnBackButton.clicked.connect(self.turnBackButtonsAction)
 
-
-
         self.chat_ui.label1.setPalette(palette)
         self.chat_ui.label1.setAlignment(QtCore.Qt.AlignCenter)
-        self.emojiler_private()
+        self.emojiler_private() # emoji adds for pravite conversation
 
-
-
-        self.mainWindow.setGeometry(QtCore.QRect(1080, 20, 800, 800))
+        self.mainWindow.setGeometry(QtCore.QRect(50, 50, 650, 670))
         self.mainWindow.setWindowTitle("Client1")
         self.mainWindow.show()
 
-        self.tcp_client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        self.tcp_client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)#tcp and socket connect server
 
-    def turnBackButtonsAction(self):
+    def turnBackButtonsAction(self):#for using turn back different room
         self.connectWidget.setHidden(True)
         self.chatWidget.setVisible(True)
         self.privateChatWidget.setHidden(True)
         message = "private_out_talking"
         self.tcp_client.send(message.encode('utf-8'))
 
-
-    def createRoom(self):
-        chatName = self.chat_ui.textEditChatName.toPlainText()
-        chatPassword =  self.chat_ui.textEditChatPass.toPlainText()
-
+    def createRoom(self):#Create rooms
+        chatName = self.chat_ui.textEditChatName.toPlainText()# we take room text and password
+        chatPassword = self.chat_ui.textEditChatPass.toPlainText()
 
         if len(chatName) == 0:
             chatName = "unknown"
 
         if len(chatPassword) == 0:
-            chatPassword= "0000"
+            chatPassword = "0000"
 
-        message="createroom_xyz-"+chatName+"-"+chatPassword
+        message = "createroom_xyz-" + chatName + "-" + chatPassword
         self.tcp_client.send(message.encode('utf-8'))
         self.chat_ui.textEditChatName.clear()
         self.chat_ui.textEditChatPass.clear()
-    def emojiTextChatRoom(self, action):
+
+    def emojiTextChatRoom(self, action):#emojies set visual codes
 
         self.chat_room_ui.textEdit.append(action)
+
     def emojiTextChat(self, action):
 
         self.chat_ui.textEdit.append(action)
@@ -189,11 +178,10 @@ class Client(object):
     def emojiText(self, action):
         self.chat_ui_private.textEdit.append(action)
 
-
-    def selectFile(self):
-        # self.fileDir.setVisible(True)
+    def selectFile(self):   # file select transactions
+        # we use feature of python
         self.fileName = self.fileDir.getOpenFileName(self.fileDir, 'Open file', '.')
-        # self.myTextBox.setText(fileName)
+
         try:
             self.fileName = str(self.fileName)
             self.fileName = self.fileName.split(",")
@@ -205,34 +193,36 @@ class Client(object):
         # self.fileDir.setHidden(True)
 
     def sendFile(self):
-        sentence = "SEND"
+        #if didn't select any  file dont send so we use this block
+        if (self.fileName != ""):
+               sentence = "SEND"
+                #we send file step by step beacause tcp sometimes add message one after another.
+               self.tcp_client.send(sentence.encode('utf-8'))
+               print(self.fileName)
+               self.tcp_client.send(self.fileName.encode('utf-8'))
+               time.sleep(1)
 
-        self.tcp_client.send(sentence.encode('utf-8'))
-        print(self.fileName)
-        self.tcp_client.send(self.fileName.encode('utf-8'))
-        time.sleep(1)
+               print('Sending file to server...')
+               message = 'BEGIN'
 
-        print('Sending file to server...')
-        message = 'BEGIN'
+               self.tcp_client.send(message.encode('utf-8'))
+               time.sleep(1)
+               with open(self.fileName, 'rb') as f:
+                   while True:
 
-        self.tcp_client.send(message.encode('utf-8'))
-        time.sleep(1)
-        with open(self.fileName, 'rb') as f:
-            while True:
+                       data = f.read(2048)
+                       print("data= ", data.decode(encoding='utf-8', errors='ignore'))
+                       self.tcp_client.send(data)
 
-                data = f.read(2048)
-                print("data= ", data.decode(encoding='utf-8', errors='ignore'))
-                self.tcp_client.send(data)
+                       if not data:
+                           print('Breaking from sending data')
+                           break
+                   time.sleep(1)
+                   message = 'ENDED'
+                   self.tcp_client.send(message.encode('utf-8'))  # I used the same size of the BEGIN token
+                   f.close()
 
-                if not data:
-                    print('Breaking from sending data')
-                    break
-            time.sleep(1)
-            message = 'ENDED'
-            self.tcp_client.send(message.encode('utf-8'))  # I used the same size of the BEGIN token
-            f.close()
-
-    def btn_connect_clicked(self):
+    def btn_connect_clicked(self):#we connect and then this progress server and client connected each other
         host = self.connect_ui.hostTextEdit.toPlainText()
         port = self.connect_ui.portTextEdit.toPlainText()
         self.nickname = self.connect_ui.nameTextEdit.toPlainText()
@@ -252,33 +242,33 @@ class Client(object):
 
         if len(self.nickname) < 1:
             self.nickname = socket.gethostname()
-
+        #if select same name ,our affairs will be very confused so we add random number to the end of the names
         self.nickname = self.nickname + "_" + str(random.randint(1, port))
 
         if self.connect(host, port, self.nickname):
             self.connectWidget.setHidden(True)
             self.chatWidget.setVisible(True)
-
+            #We take our process to the thread and make it work continuously.
             self.mainWindow.setWindowTitle(str(self.nickname))
             self.recv_thread = ReceiveThread(self.tcp_client)
             self.recv_thread.signal.connect(self.show_message)
             self.recv_thread.start()
             print("[INFO] recv thread started")
 
-    def clearLayout(self, layout):
+    def clearLayout(self, layout):#we use it to empty widgets
         while layout.count():
             child = layout.takeAt(0)
             if child.widget():
                 child.widget().deleteLater()
 
-    def show_message(self, message):
+    def show_message(self, message):#to show the incoming message on the chat screen
         print("gelen mesaj:", message)
 
         if message[0:2] == '+ ':
             i = 0
             print(message)
 
-            print("vbox2",self.chat_ui.vbox2.isEmpty())
+            print("vbox2", self.chat_ui.vbox2.isEmpty())
 
             self.buttonList.clear()
             self.clearLayout(self.chat_ui.vbox)
@@ -299,15 +289,14 @@ class Client(object):
                 self.chat_ui.textBrowser2.append(message[i])
                 self.chat_ui.vbox.addWidget(self.buttonList[i])
 
-
                 print("vbox1", self.chat_ui.vbox.isEmpty(), "  i=", i)
 
 
 
-        elif message[0:4] == '^+^ ':
+        elif message[0:4] == '^+^ ':#the part used to show the incoming chat rooms on the screen
             i = 0
             print(message)
-            print("vbox2",self.chat_ui.vbox.isEmpty())
+            print("vbox2", self.chat_ui.vbox.isEmpty())
 
             self.buttonRoomList.clear()
 
@@ -316,13 +305,13 @@ class Client(object):
             self.chat_ui.textBrowser2.clear()
             # self.chat_ui.vbox
             message = str(message).split("*")
-            print("sayısı=",(len(message)-1))
+            print("sayısı=", (len(message) - 1))
             for i in range(len(message) - 1):
                 strmessage = str(message[i])
                 messageNickAndPorts = message[i].split("-")
-                name= messageNickAndPorts[1]
+                name = messageNickAndPorts[1]
                 password = messageNickAndPorts[2]
-                print("gelen oda ismi=",name,"oda şifresi=",password)
+                print("gelen oda ismi=", name, "oda şifresi=", password)
                 self.buttonRoomList[i].setVisible(True)
                 self.buttonRoomList[i].setText(name)
                 self.buttonRoomList[i].clicked.connect(partial(self.joinRoom, action=strmessage))
@@ -335,18 +324,20 @@ class Client(object):
 
 
 
-        elif message == "question_xyz":
+        elif message == "question_xyz":#block shown when private conversation request arrives
             print("istek geldi")
             self.showdialog()
-        elif message == "youJoinRoom":
+        elif message == "not_accept_xyz":#if private conversation dont accept we seen that block
+            self.showdialogNotAccept()
+        elif message == "youJoinRoom":#communication used when any user enters the room
             self.connectWidget.setHidden(True)
             self.chatWidget.setHidden(True)
             self.privateChatWidget.setHidden(True)
             name = self.chat_ui.textEditChatName.toPlainText()
-            print("name is=",name)
+            print("name is=", name)
             self.mainWindow.setWindowTitle(name)
             self.chatRoomWidget.setVisible(True)
-        elif message == "turnBackSignal*":
+        elif message == "turnBackSignal*":#if we leave room send message server and then ve turnback chat ui
             self.chat_room_ui.textBrowser.clear()
             self.connectWidget.setHidden(True)
             self.chatWidget.setVisible(True)
@@ -354,14 +345,17 @@ class Client(object):
             self.privateChatWidget.setHidden(True)
             self.chatRoomWidget.setHidden(True)
 
-        elif message == "not_accept_xyz":
-            self.showdialogNotAccept()
-        elif message == "private_out_talking":
+        elif message == "match_xyz":#if other client accept private conversation request,clients connect each other
+            self.connectWidget.setHidden(True)
+            self.chatWidget.setHidden(True)
+            self.privateChatWidget.setVisible(True)
+        elif message == "private_out_talking":# if any client leave private conversation the other client show that block and leave
             print("private_out_talkingi algıladı")
             self.showdialogTalkingOut()
+        elif (message[0:12] == "private_xyz*"):#oprivate room recieve message and take here
+            self.chat_ui_private.textBrowser.append(message[12:])
 
-
-        elif message == "GET":
+        elif message == "GET":#We use this block when importing files
 
             print('Get içine girdi dosya adı yollanması bekleniyor')
             yenigelen = self.tcp_client.recv(1024)
@@ -400,19 +394,13 @@ class Client(object):
             print("burada bitiyor")
             print('Done receiving file')
 
-        elif (message[0:12] == "private_xyz*"):
-            self.chat_ui_private.textBrowser.append(message[12:])
-        elif (message[0:20] == "chatroomMessage_xyz*"):
+
+        elif (message[0:20] == "chatroomMessage_xyz*"):#chatroom message take here
             print("chatroomMEssage konumuna girdi:")
             self.chat_room_ui.textBrowser.append(message[20:])
 
-        elif message == "match_xyz":
-            self.connectWidget.setHidden(True)
-            self.chatWidget.setHidden(True)
-            self.privateChatWidget.setVisible(True)
-        elif message=="joinRoom_xyz":
-            print("buraya girdi")
-        else:
+
+        else:# else the all message add chat ui teext browser
             self.chat_ui.textBrowser.append(message)
 
     def printName(self, action):
@@ -430,10 +418,10 @@ class Client(object):
             self.send_message_private(send_message_clientName)
 
     def joinRoom(self, action):
-        message="join_createdroom_xyz"+action
+        message = "join_createdroom_xyz" + action
         self.tcp_client.send(message.encode('utf-8'))
 
-        print("Action=",action)
+        print("Action=", action)
 
     def connect(self, host, port, nickname):
 
@@ -466,11 +454,12 @@ class Client(object):
             print("[INFO]", error)
             self.show_error("Server Error", error)
         self.chat_ui.textEdit.clear()
+
     def send_message_ChatRoom(self):
         message = self.chat_room_ui.textEdit.toPlainText()
 
         self.chat_room_ui.textBrowser.append("Me: " + message)
-        messager = "chatroomMessage_xyz*" +self.nickname+":"+message
+        messager = "chatroomMessage_xyz*" + self.nickname + ":" + message
         print("sent: " + message)
 
         try:
@@ -480,6 +469,7 @@ class Client(object):
             print("[INFO]", error)
             self.show_error("Server Error", error)
         self.chat_room_ui.textEdit.clear()
+
     def send_message_private2(self):
         messager = self.chat_ui_private.textEdit.toPlainText()
         self.chat_ui_private.textBrowser.append("Me: " + messager)
@@ -535,17 +525,16 @@ class Client(object):
         self.msgt = QMessageBox()
         self.msgt.setIcon(QMessageBox.Information)
 
-        self.msgt.setText("This is a message box")
-        self.msgt.setInformativeText("This is additional information")
-        self.msgt.setWindowTitle("MessageBox demo")
-        self.msgt.setDetailedText("The details are as follows:")
+        self.msgt.setText("İkili Özel Konuşma Daveti")
+        self.msgt.setInformativeText("İkili özel görüşme için davet edildiniz Kabul ediyor musunuz?")
+        self.msgt.setWindowTitle("Bilgilendirme")
+        self.msgt.setDetailedText("İkili özel görüşmeler iki kişi arasında olur ve  diğer chat bunu göremez dosya göndermek"
+                                  "içinde bu yöntemi kullanmanız gerekiyor")
         self.msgt.setStandardButtons(QMessageBox.Ok | QMessageBox.Cancel)
         self.msgt.buttonClicked.connect(self.msgbtn)
 
         retval = self.msgt.exec_()
         print("value of pressed message box button:", retval)
-
-
 
     def msgbtn(self, i):
         print("Button pressed is:", i.text())
@@ -572,9 +561,11 @@ class Client(object):
 
         retval = self.msgr.exec_()
         print("value of pressed message box button:", retval)
+
     def turnBackMessage(self):
-        message="chatroom_turnback*"
+        message = "chatroom_turnback*"
         self.tcp_client.send(message.encode('utf-8'))
+
     def emojilerChat(self):
         self.chat_ui.pushButtonSmail.clicked.connect(
             partial(self.emojiTextChat, action=self.chat_ui.pushButtonSmail.text()))
@@ -733,6 +724,7 @@ class Client(object):
             partial(self.emojiTextChatRoom, action=self.chat_room_ui.pushButtonGa.text()))
         self.chat_room_ui.pushButtonSad.clicked.connect(
             partial(self.emojiTextChatRoom, action=self.chat_room_ui.pushButtonSad.text()))
+
 
 if __name__ == "__main__":
     app = QtWidgets.QApplication(sys.argv)
